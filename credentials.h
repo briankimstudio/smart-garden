@@ -2,12 +2,12 @@
 #define CREDENTIALS_H
 
 // Place actual value here
-#define WIFI_SSID 	"SSID"
-#define WIFI_PASSWD	"Password"
+#define WIFI_SSID 	"ITM_332"
+#define WIFI_PASSWD	"92221550"
 
-#define TS_URL 		"ThingSpeak url"
-#define TS_KEY 		"ThingSpeak key"
-#define TS_CHANNEL	"ThingSpeak channel"
+#define TS_URL 		"api.thingspeak.com"
+#define TS_KEY 		"LANDXN0Z8XW2C76F"
+#define TS_CHANNEL	"941576"
 
 #define MQTT_URL	"MQTT url"
 #define MQTT_ID		"MQTT id"

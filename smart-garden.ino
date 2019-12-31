@@ -11,6 +11,7 @@
    D5 : DHT11 Temp/humid
 */
 
+// Place actual value here
 #include "credentials.h"
 
 #include <Wire.h>

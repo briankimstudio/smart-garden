@@ -11,6 +11,8 @@
    D5 : DHT11 Temp/humid
 */
 
+#include "credentials.h"
+
 #include <Wire.h>
 #include <BH1750.h>
 #include "DHT.h"
@@ -43,13 +45,13 @@ unsigned long previousMillis = 0;
 const long interval = 60000;
 
 // Replace with your SSID and Password
-const char* ssid     = "ITM_332";
-const char* password = "92221550";
+const char* ssid     = WIFI_SSID;
+const char* password = WIFI_PASSWD;
 
 // Replace with your unique Thing Speak WRITE API KEY
-const char* cloudUrl="api.thingspeak.com";
-const char* cloudKey="LANDXN0Z8XW2C76F";
-const char* cloudChannel="941576";
+const char* cloudUrl     = TS_URL;
+const char* cloudKey     = TS_KEY;
+const char* cloudChannel = TS_CHANNEL;
 
 String sysName="smart-garden";
 

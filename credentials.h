@@ -3,7 +3,7 @@
 
 // Place actual value here
 #define WIFI_SSID 	"SSID"
-#define WIFI_PASSWD "Password"
+#define WIFI_PASSWD	"Password"
 
 #define TS_URL 		"ThingSpeak url"
 #define TS_KEY 		"ThingSpeak key"

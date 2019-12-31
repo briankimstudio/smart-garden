@@ -1,3 +1,16 @@
+/*
+  Smart garden
+  2019/12/31
+  Board
+   Wemods D1 mini board
+
+  PIN map
+   A0 : Soil moisture
+   D1 : SCL(I2C) BH1750
+   D2 : SDA
+   D5 : DHT11 Temp/humid
+*/
+
 #include <Wire.h>
 #include <BH1750.h>
 #include "DHT.h"
@@ -35,8 +48,10 @@ const char* password = "92221550";
 
 // Replace with your unique Thing Speak WRITE API KEY
 const char* cloudUrl="api.thingspeak.com";
-String cloudKey="LANDXN0Z8XW2C76F";
-String cloudChannel="941576";
+const char* cloudKey="LANDXN0Z8XW2C76F";
+const char* cloudChannel="941576";
+
+String sysName="smart-garden";
 
 #define DHTPIN D5
 #define DHTTYPE DHT11
@@ -65,8 +80,12 @@ void setup() {
   Serial.print("WiFi connected in: "); 
   Serial.print(millis());
   Serial.print(", IP address: "); 
-  Serial.println(WiFi.localIP());  
-
+  Serial.print(WiFi.localIP());  
+  Serial.print(", MAC address: ");
+  Serial.println(WiFi.macAddress());
+  String macAddress = WiFi.macAddress();
+  macAddress.toLowerCase();
+  sysName += "-"+macAddress.substring(15);
   // OTA
   ArduinoOTA.onStart([]() {
     Serial.println("Start");
@@ -85,13 +104,15 @@ void setup() {
     else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
     else if (error == OTA_END_ERROR) Serial.println("End Failed");
   });
-  ArduinoOTA.setHostname("smartgarden");
+  Serial.println(sysName);
+  ArduinoOTA.setHostname(sysName.c_str());
+  
   ArduinoOTA.begin();
 
   Serial.println("Ready");
 //  Serial.print("IP address: ");
 //  Serial.println(WiFi.localIP());
-
+  digitalWrite(LED_BUILTIN, LOW); 
   retrieveTime();    
 //  delay(2000);
 }
@@ -108,7 +129,7 @@ void loop() {
   char datetime_str[25];
   sprintf(datetime_str,"%4d-%02d-%02dT%02d:%02d:%02d",year(),month(),day(),hour(),minute(),second());
   Serial.print(datetime_str);
-
+  Serial.print(" ");
   float h = dht.readHumidity();
   float t = dht.readTemperature();
   Serial.print(F("Humidity: "));
@@ -133,50 +154,51 @@ void loop() {
   Serial.print(" ");
   Serial.println(sensorValue);
  
-  if (sensorValue<limit) {
-    digitalWrite(LED_BUILTIN, HIGH); 
-  }
-  else {
-    digitalWrite(LED_BUILTIN, LOW); 
-  }
+//  if (sensorValue<limit) {
+//    digitalWrite(LED_BUILTIN, HIGH); 
+//  }
+//  else {
+//    digitalWrite(LED_BUILTIN, LOW); 
+//  }
 
   if (currentMillis - previousMillis >= interval) {
+    digitalWrite(LED_BUILTIN, HIGH);    // turn the LED off by making the voltage LOW
     // save the last time you blinked the LED
-  previousMillis = currentMillis;
+    previousMillis = currentMillis;
 
-  //
-  // temp, humid, light, soil
-  sync(t, h, lux, sensorValue);
-}
+    //
+    // temp, humid, light, soil
+    sync(t, h, lux, sensorValue);
+    digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
+  }
 
-  digitalWrite(LED_BUILTIN, HIGH);    // turn the LED off by making the voltage LOW
   //////////////////////////////////////
   // Avoid delay() for OTA
   // OTA won't work during long delay()
   //////////////////////////////////////
 
-// delay(60000);
+ delay(100);
 }
 
 int sync(float temperature, float humidity, uint16_t light, int soil) {
   WiFiClient* client = new WiFiClient;
   char datetime_str[25];
-  String postStr = "write_api_key=" + cloudKey +"&time_format=absolute&updates=";
+  String postStr = "write_api_key=" + String(cloudKey) +"&time_format=absolute&updates=";
   sprintf(datetime_str,"%4d-%02d-%02dT%02d:%02d:%02d",year(),month(),day(),hour(),minute(),second());
   // 2018-06-14T12:12:22-0500
   postStr += String(datetime_str)+
-  "+0800,"+
-  String(temperature)+","+
-  String(humidity)+","+
-  String(light)+","+
-  String(soil);
+    "+0800,"+
+    String(temperature)+","+
+    String(humidity)+","+
+    String(light)+","+
+    String(soil);
 
   VERBOSELN( postStr );
   
   if ( !client ) { return false; }
 
   if (client->connect( cloudUrl , 80 )) {
-    client->println( "POST /channels/"+cloudChannel+"/bulk_update.csv HTTP/1.1" );
+    client->println( "POST /channels/"+String(cloudChannel)+"/bulk_update.csv HTTP/1.1" );
     client->println( "Host: api.thingspeak.com" );
     client->println( "Connection: close" );
     client->println( "Content-Type: application/x-www-form-urlencoded" );
@@ -201,7 +223,6 @@ int sync(float temperature, float humidity, uint16_t light, int soil) {
        } while ( client->available() > 0 );
      }
      client->stop();
-
      
      if ( !response.indexOf("202 Accepted") ) {
       VERBOSELN("NM : sync : ERROR POST failed");
@@ -243,14 +264,4 @@ int retrieveTime() {
     localtime.substring(8,10).toInt(),
     localtime.substring(5,7).toInt(),
     localtime.substring(0,4).toInt());
-  // VERBOSE(hour());
-  // VERBOSE(minute());
-  // VERBOSE(second());
-  // VERBOSE(" ");
-  // VERBOSE(day());
-  // VERBOSE(" ");
-  // VERBOSE(month());
-  // VERBOSE(" ");
-  // VERBOSE(year()); 
-  // VERBOSELN(); 
 }
